@@ -1,0 +1,625 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sign Invaders — Project Prototype</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#060714;--ship:#8be9fd;--inv:#ffb86b;--bullet:#f8f8f2;--hud:#50fa7b}
+    html,body{height:100%;margin:0;background:linear-gradient(180deg,#02030a 0%,var(--bg) 100%);font-family:Inter,system-ui,Segoe UI,Arial}
+    #gameTitle {
+      font-family: 'Press Start 2P', monospace;
+      color: #ff8c00;
+      text-shadow: 2px 2px 0 #8b4513, 4px 4px 0 #000;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      text-align: center;
+      margin-top: 32px;
+      margin-bottom: 8px;
+      user-select: none;
+    }
+    #gameSubtitle {
+      font-family: 'Press Start 2P', monospace;
+      color: #ffd700;
+      text-shadow: 1px 1px 0 #000;
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      text-align: center;
+      margin-top: 0;
+      margin-bottom: 8px;
+      user-select: none;
+      opacity: 0.9;
+    }
+    #gameWrap{
+      display: grid;
+      place-items: center;
+      height: 100vh;
+      padding: 8px 20px 20px 20px;
+      position: relative;
+      z-index: 2;
+    }
+    canvas{
+      background: transparent;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(2,3,10,.6);
+    }
+    .ui {
+      position: fixed;
+      left: 20px;
+      top: 20px;
+      color: var(--hud);
+      font-weight: 700;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 14px;
+      text-shadow: 2px 2px 0 #000;
+      background: rgba(0,0,0,0.7);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 2px solid var(--hud);
+      z-index: 3;
+    }
+    .help {
+      position: fixed;
+      right: 20px;
+      top: 20px;
+      color: #cbd5e1;
+      font-size: 13px;
+      font-family: 'Press Start 2P', monospace;
+      text-shadow: 1px 1px 0 #000;
+      background: rgba(0,0,0,0.7);
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 2px solid #cbd5e1;
+      text-align: center;
+      line-height: 1.4;
+      z-index: 3;
+    }
+    .centerMsg{
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%,-50%);
+      color: #cbd5e1;
+      text-align: center;
+      z-index: 3;
+    }
+    button{background:#111827;color:#fff;border:0;padding:8px 12px;border-radius:8px;cursor:pointer}
+    a small{color:#9ca3af}
+    .credit {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      color: #8be9fd;
+      font-family: 'Press Start 2P', monospace;
+      font-size: 10px;
+      text-shadow: 1px 1px 0 #000;
+      background: rgba(0,0,0,0.7);
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid #8be9fd;
+      z-index: 3;
+    }
+    .floating-particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .particle {
+      position: absolute;
+      background: radial-gradient(circle, rgba(139, 233, 253, 0.8) 0%, rgba(139, 233, 253, 0.3) 50%, transparent 100%);
+      border-radius: 50%;
+      animation: float 12s infinite linear;
+      box-shadow: 0 0 10px rgba(139, 233, 253, 0.5);
+    }
+    @keyframes float {
+      0% { 
+        transform: translateY(100vh) translateX(0px) rotate(0deg); 
+        opacity: 0; 
+      }
+      5% { opacity: 1; }
+      95% { opacity: 1; }
+      100% { 
+        transform: translateY(-100px) translateX(100px) rotate(360deg); 
+        opacity: 0; 
+      }
+    }
+    .particle2 {
+      position: absolute;
+      background: radial-gradient(circle, rgba(255, 184, 107, 0.6) 0%, rgba(255, 184, 107, 0.2) 50%, transparent 100%);
+      border-radius: 50%;
+      animation: float2 15s infinite linear;
+      box-shadow: 0 0 8px rgba(255, 184, 107, 0.4);
+    }
+    @keyframes float2 {
+      0% { 
+        transform: translateY(0vh) translateX(100vw) rotate(0deg); 
+        opacity: 0; 
+      }
+      5% { opacity: 1; }
+      95% { opacity: 1; }
+      100% { 
+        transform: translateY(100vh) translateX(-100px) rotate(-360deg); 
+        opacity: 0; 
+      }
+    }
+    .particle3 {
+      position: absolute;
+      background: radial-gradient(circle, rgba(80, 250, 123, 0.5) 0%, rgba(80, 250, 123, 0.2) 50%, transparent 100%);
+      border-radius: 50%;
+      animation: float3 18s infinite linear;
+      box-shadow: 0 0 6px rgba(80, 250, 123, 0.3);
+    }
+    @keyframes float3 {
+      0% { 
+        transform: translateY(50vh) translateX(-100px) rotate(0deg); 
+        opacity: 0; 
+      }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { 
+        transform: translateY(-50vh) translateX(100vw) rotate(720deg); 
+        opacity: 0; 
+      }
+    }
+    .cosmic-rings {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      z-index: 1;
+    }
+    .ring {
+      position: absolute;
+      border: 2px solid rgba(139, 233, 253, 0.2);
+      border-radius: 50%;
+      animation: pulse 6s infinite ease-in-out;
+      box-shadow: 0 0 15px rgba(139, 233, 253, 0.1);
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 0.2; }
+      50% { transform: scale(1.1); opacity: 0.4; }
+    }
+  </style>
+</head>
+<body>
+  <div id="gameTitle">Sign Invaders</div>
+  <div id="gameSubtitle">🍊 Orange-tastic Space Adventure! 🚀</div>
+  <div id="gameWrap">
+    <canvas id="game" width="640" height="540"></canvas>
+  </div>
+  <div class="ui">🎯 Score: <span id="score">0</span> &nbsp; ❤️ Lives: <span id="lives">3</span></div>
+  <div class="help">🎮 CONTROLS<br>← → = Move<br>SPACE = Shoot<br>P = Pause</div>
+  <div class="centerMsg" id="centerMsg"></div>
+  <div class="credit">made by: @donutlover8595</div>
+  
+  <div class="floating-particles" id="particles"></div>
+  <div class="cosmic-rings" id="rings"></div>
+
+<script>
+/*
+  Space Invaders - Single-file prototype
+  - Simple player (triangle) at bottom
+  - Grid of invaders that move left/right and down
+  - Player shoots bullets; invaders can shoot back
+  - Score and lives
+  - Easy to extend: power-ups, levels, assets
+*/
+
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+// HUD
+const scoreEl = document.getElementById('score');
+const livesEl = document.getElementById('lives');
+const centerMsg = document.getElementById('centerMsg');
+
+let keys = {};
+let gameState = 'menu'; // 'menu', 'playing', 'paused', 'over'
+
+// Player
+const player = {
+  x: W/2,
+  y: H - 40,
+  w: 30, // was 38
+  h: 20, // was 26
+  speed: 6,
+  cooldown: 0
+};
+
+// Bullets
+let playerBullets = [];
+let enemyBullets = [];
+
+// Invaders
+let invaders = [];
+let invaderCols = 10;
+let invaderRows = 4;
+let invaderSpacing = 36; // was 46
+let invaderOrigin = {x: 70, y: 45}; // was y: 60
+let invSpeed = 0.6;
+let invDir = 1; // 1 = right, -1 = left
+let invDescend = 0;
+
+// Game variables
+let score = 0;
+let lives = 3;
+let level = 1;
+let frame = 0;
+let lastTime = 0;
+let pauseTextTimeout = 0;
+
+// Background particles
+let particles = [];
+let rings = [];
+
+// Load player ship image
+const shipImg = new Image();
+shipImg.src = 'sign_images/sign.png';
+
+// Load orange bullet image
+const orangeImg = new Image();
+orangeImg.src = 'lamumu_images/character1.jpg'; // Using character1.jpg as orange image
+
+// Load enemy image
+const enemyImg = new Image();
+enemyImg.src = 'sign_images/orange.png';
+
+// Load sound effects
+const shootSound = new Audio('sign_sound/break.mp3');
+const hitSound = new Audio('sign_sound/break.mp3');
+const impactSound = new Audio('sign_sound/impact.mp3');
+
+function resetLevel() {
+  invaders = [];
+  for (let r=0;r<invaderRows;r++){
+    for (let c=0;c<invaderCols;c++){
+      invaders.push({
+        x: invaderOrigin.x + c*invaderSpacing,
+        y: invaderOrigin.y + r*invaderSpacing,
+        w: 28, // was 34
+        h: 20, // was 24
+        row: r,
+        col: c,
+        dead:false,
+        anim: 0
+      });
+    }
+  }
+  invSpeed = 0.6 + (level-1)*0.12;
+  invDir = 1;
+  playerBullets = [];
+  enemyBullets = [];
+}
+
+function startGame(){
+  score = 0; lives = 3; level = 1; player.x = W/2; resetLevel(); gameState='playing'; centerMsg.textContent='';
+}
+
+// Create background elements
+function createBackgroundElements() {
+  // Clear existing particles
+  const particlesContainer = document.getElementById('particles');
+  particlesContainer.innerHTML = '';
+  
+  // Get game canvas position and size
+  const gameCanvas = document.getElementById('game');
+  const gameRect = gameCanvas.getBoundingClientRect();
+  
+  // Calculate safe areas where particles can appear
+  const leftArea = gameRect.left;
+  const rightArea = window.innerWidth - gameRect.right;
+  const topArea = gameRect.top;
+  const bottomArea = window.innerHeight - gameRect.bottom;
+  
+  // Create particles only in non-game areas
+  for (let i = 0; i < 8; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle';
+    
+    // Position in left or right areas only
+    if (Math.random() < 0.5) {
+      particle.style.left = Math.random() * Math.max(0, leftArea - 50) + 'px';
+    } else {
+      particle.style.left = (gameRect.right + Math.random() * Math.max(0, rightArea - 50)) + 'px';
+    }
+    
+    particle.style.width = Math.random() * 8 + 4 + 'px';
+    particle.style.height = particle.style.width;
+    particle.style.animationDelay = Math.random() * 12 + 's';
+    particle.style.animationDuration = (Math.random() * 6 + 8) + 's';
+    particlesContainer.appendChild(particle);
+  }
+  
+  // Type 2: Right to left - only in top and bottom areas
+  for (let i = 0; i < 8; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle2';
+    // Position particles only in top or bottom areas, avoiding center
+    if (Math.random() < 0.5) {
+      particle.style.top = Math.random() * Math.max(0, topArea - 50) + 'px';
+    } else {
+      particle.style.top = (gameRect.bottom + Math.random() * Math.max(0, bottomArea - 50)) + 'px';
+    }
+    particle.style.width = Math.random() * 6 + 3 + 'px';
+    particle.style.height = particle.style.width;
+    particle.style.animationDelay = Math.random() * 15 + 's';
+    particle.style.animationDuration = (Math.random() * 8 + 10) + 's';
+    particlesContainer.appendChild(particle);
+  }
+  
+  // Type 3: Diagonal movement - only in corner areas
+  for (let i = 0; i < 9; i++) {
+    const particle = document.createElement('div');
+    particle.className = 'particle3';
+    // Position particles only in corner areas, avoiding center
+    const corner = Math.floor(Math.random() * 4);
+    switch(corner) {
+      case 0: // Top-left
+        particle.style.left = Math.random() * Math.max(0, leftArea - 100) + 'px';
+        particle.style.top = Math.random() * Math.max(0, topArea - 100) + 'px';
+        break;
+      case 1: // Top-right
+        particle.style.left = (gameRect.right + Math.random() * Math.max(0, rightArea - 100)) + 'px';
+        particle.style.top = Math.random() * Math.max(0, topArea - 100) + 'px';
+        break;
+      case 2: // Bottom-left
+        particle.style.left = Math.random() * Math.max(0, leftArea - 100) + 'px';
+        particle.style.top = (gameRect.bottom + Math.random() * Math.max(0, bottomArea - 100)) + 'px';
+        break;
+      case 3: // Bottom-right
+        particle.style.left = (gameRect.right + Math.random() * Math.max(0, rightArea - 100)) + 'px';
+        particle.style.top = (gameRect.bottom + Math.random() * Math.max(0, bottomArea - 100)) + 'px';
+        break;
+    }
+    particle.style.width = Math.random() * 5 + 3 + 'px';
+    particle.style.height = particle.style.width;
+    particle.style.animationDelay = Math.random() * 18 + 's';
+    particle.style.animationDuration = (Math.random() * 10 + 12) + 's';
+    particlesContainer.appendChild(particle);
+  }
+  
+  // Create cosmic rings - positioned to avoid game area
+  const ringsContainer = document.getElementById('rings');
+  ringsContainer.innerHTML = '';
+  for (let i = 0; i < 3; i++) {
+    const ring = document.createElement('div');
+    ring.className = 'ring';
+    ring.style.width = (300 + i * 200) + 'px';
+    ring.style.height = (300 + i * 200) + 'px';
+    ring.style.animationDelay = i * 2 + 's';
+    ringsContainer.appendChild(ring);
+  }
+}
+
+// Input
+window.addEventListener('keydown', e=>{ keys[e.code]=true; if(e.code==='Space') e.preventDefault(); if(e.key==='p' || e.key==='P') togglePause();});
+window.addEventListener('keyup', e=> keys[e.code]=false);
+
+function togglePause(){
+  if(gameState==='playing'){ gameState='paused'; centerMsg.innerHTML='PAUSED<br><small>Press P to resume</small>';}
+  else if(gameState==='paused'){ gameState='playing'; centerMsg.textContent=''; }
+}
+
+// Utilities
+function rectsOverlap(a,b){
+  return !(a.x+a.w < b.x || a.x > b.x+b.w || a.y+a.h < b.y || a.y > b.y+b.h);
+}
+
+// Shooting
+function playerShoot(){
+  if(player.cooldown<=0){
+    playerBullets.push({x: player.x, y: player.y-10, w:2, h:30, speed:8}); // Laser: thin and fast
+    player.cooldown = 8; // Faster firing rate for lasers
+    shootSound.currentTime = 0;
+    shootSound.play();
+  }
+}
+
+function enemyShoot(x,y){
+  enemyBullets.push({x:x, y:y+14, w:2, h:12, speed:5}); // Enemy lasers: thin and fast
+}
+
+// Update
+function update(){
+  if(gameState!=='playing') return;
+  frame++;
+
+  // Player movement
+  if(keys['ArrowLeft']||keys['KeyA']) player.x -= player.speed;
+  if(keys['ArrowRight']||keys['KeyD']) player.x += player.speed;
+  player.x = Math.max(30, Math.min(W-30, player.x));
+  if(keys['Space']) playerShoot();
+  if(player.cooldown>0) player.cooldown--;
+
+  // Invaders movement
+  let rightMost = -1, leftMost = W+1;
+  invaders.forEach(i=>{ if(i.dead) return; rightMost = Math.max(rightMost, i.x); leftMost = Math.min(leftMost, i.x); });
+  if(rightMost > W-70) invDir = -1, invDescend = 10;
+  if(leftMost < 60) invDir = 1, invDescend = 10;
+
+  invaders.forEach(i=>{
+    if(i.dead) return;
+    i.x += invDir * invSpeed;
+    i.anim = (i.anim + 0.12) % 2;
+    if(invDescend>0){ i.y += 0.5; }
+    // random shooting
+    if(Math.random() < 0.0008*(1+level*0.2)){
+      enemyShoot(i.x, i.y);
+    }
+  });
+  if(invDescend>0) invDescend = Math.max(0, invDescend-1);
+
+  // Player bullets
+  for(let i=playerBullets.length-1;i>=0;i--){
+    let b = playerBullets[i]; b.y -= b.speed;
+    if(b.y < -10) { playerBullets.splice(i,1); continue; }
+
+    // hit invaders
+    for(let j=0;j<invaders.length;j++){
+      let inv = invaders[j];
+      if(inv.dead) continue;
+      if(rectsOverlap({x:b.x-2,y:b.y,w:b.w,h:b.h},{x:inv.x-16,y:inv.y-12,w:inv.w,h:inv.h})){
+        inv.dead = true; playerBullets.splice(i,1); score += 10 + (3 - inv.row)*5; 
+        hitSound.currentTime = 0;
+        hitSound.play();
+        break;
+      }
+    }
+  }
+
+  // Enemy bullets
+  for(let i=enemyBullets.length-1;i>=0;i--){
+    let b = enemyBullets[i]; b.y += b.speed;
+    if(b.y > H+10){ enemyBullets.splice(i,1); continue; }
+    // hit player
+    if(rectsOverlap({x:b.x-2,y:b.y,w:b.w,h:b.h},{x:player.x-14,y:player.y-10,w:28,h:14})){
+      enemyBullets.splice(i,1); lives--; livesEl.textContent = lives; 
+      impactSound.currentTime = 0;
+      impactSound.play();
+      if(lives<=0) endGame();
+    }
+  }
+
+  // Check invaders reaching bottom
+  for(let inv of invaders){ if(inv.dead) continue; if(inv.y+inv.h > player.y-25){ endGame(); break; } } // was player.y-30
+
+  // Level complete?
+  if(invaders.every(i=>i.dead)){
+    level++; centerMsg.innerHTML = `Level ${level}<br><small>Press Space to continue</small>`; gameState='menu';
+    // increase rows/cols slowly
+    if(level % 2 === 0) invaderCols = Math.min(12, invaderCols+1);
+    if(level % 3 === 0) invaderRows = Math.min(6, invaderRows+1);
+    // wait for player to press space to start
+  }
+
+  scoreEl.textContent = score;
+}
+
+function endGame(){
+  gameState = 'over'; centerMsg.innerHTML = `GAME OVER<br>Score: ${score}<br><button onclick="startGame()">Restart</button>`;
+}
+
+// Draw
+function draw(){
+  // clear
+  ctx.clearRect(0,0,W,H);
+
+  // stars background
+  ctx.fillStyle = '#0b1221'; ctx.fillRect(0,0,W,H);
+  for(let s=0;s<60;s++){
+    let sx = (s*97+frame*0.15* (s%3+1))%W; let sy = (s*37+frame*0.3)%H; ctx.fillStyle = (s%7===0)?'#445':'#071'; ctx.fillRect(sx,sy,1,1);
+  }
+
+  // draw player (image)
+  ctx.save();
+  ctx.translate(player.x, player.y);
+  ctx.drawImage(shipImg, -player.w/2, -player.h/2, player.w, player.h);
+  ctx.restore();
+
+  // draw invaders
+  invaders.forEach(inv=>{
+    if(inv.dead) return;
+    ctx.save(); ctx.translate(inv.x, inv.y);
+    
+    // Draw enemy image
+    ctx.drawImage(enemyImg, -inv.w/2, -inv.h/2, inv.w, inv.h);
+    
+    ctx.restore();
+  });
+
+  // bullets
+  // Draw player bullets as laser beams
+  playerBullets.forEach(b => {
+    ctx.save();
+    
+    // Laser glow effect
+    ctx.shadowColor = '#ff8c00';
+    ctx.shadowBlur = 8;
+    
+    // Main laser beam
+    ctx.fillStyle = '#ff8c00';
+    ctx.fillRect(b.x - 1, b.y, 2, b.h);
+    
+    // Laser core (brighter center)
+    ctx.fillStyle = '#ffd700';
+    ctx.fillRect(b.x - 0.5, b.y, 1, b.h);
+    
+    // Laser tip glow
+    ctx.fillStyle = '#ff8c00';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y + b.h, 3, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  });
+  
+  // Draw enemy bullets as red laser beams
+  enemyBullets.forEach(b => {
+    ctx.save();
+    
+    // Enemy laser glow effect
+    ctx.shadowColor = '#ff0000';
+    ctx.shadowBlur = 6;
+    
+    // Main enemy laser beam
+    ctx.fillStyle = '#ff0000';
+    ctx.fillRect(b.x - 1, b.y, 2, b.h);
+    
+    // Enemy laser core
+    ctx.fillStyle = '#ff6666';
+    ctx.fillRect(b.x - 0.5, b.y, 1, b.h);
+    
+    // Enemy laser tip glow
+    ctx.fillStyle = '#ff0000';
+    ctx.beginPath();
+    ctx.arc(b.x, b.y, 2, 0, Math.PI * 2);
+    ctx.fill();
+    
+    ctx.restore();
+  });
+
+  // UI overlay
+  ctx.fillStyle = 'rgba(255,255,255,0.02)'; ctx.fillRect(8,8,120,36);
+
+  // paused overlay
+  if(gameState==='paused'){
+    ctx.fillStyle='rgba(2,3,10,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#cbd5e1'; ctx.font='28px system-ui'; ctx.textAlign='center'; ctx.fillText('PAUSED', W/2, H/2);
+  }
+}
+
+// Game loop
+function loop(ts){
+  const dt = ts - lastTime; lastTime = ts;
+  update(); draw();
+  requestAnimationFrame(loop);
+}
+
+// Start loop
+requestAnimationFrame(loop);
+
+// Initialize background
+createBackgroundElements();
+
+// Simple controls on menu
+window.addEventListener('keydown', e=>{
+  if(gameState==='menu' && e.code==='Space'){
+    if(centerMsg.textContent.includes('Level')){ resetLevel(); player.x = W/2; gameState='playing'; centerMsg.textContent=''; }
+    else startGame();
+  }
+});
+
+// Show initial menu
+centerMsg.innerHTML = `SPACE INVADERS<br><small>Press Space to start</small>`;
+
+</script>
+</body>
+</html>
